@@ -4,10 +4,9 @@ sysctl -w net.ipv6.conf.default.disable_ipv6=1
 sysctl -w net.ipv6.conf.lo.disable_ipv6=1
 sysctl -p
 
-# Запрос пароля у пользователя сразу в начале скрипта
-echo "Пожалуйста, введите пароль для генерации хеша:"
-read -sp "Введите пароль: " password
-echo
+
+# Генерация случайного пароля
+PASSWORD=$(< /dev/urandom tr -dc A-Z-a-z-0-9 | head -c${1:-16};echo;)
 
 # Обновление пакетов и установка apache2-utils
 sudo apt-get update
@@ -21,19 +20,10 @@ fi
 
 
 # Генерация bcrypt-хеша
-hash=$(htpasswd -nbBC 10 "" "$password" | tr -d ':\n')
+hash=$(htpasswd -nbBC 10 "" "$PASSWORD" | tr -d ':\n')
 
 # Вывод хеша
 echo "Bcrypt хеш: $hash"
-
-# Загрузка Docker Compose
-sudo curl -L "https://github.com/docker/compose/releases/download/v2.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-
-# Перемещение Docker Compose в /usr/bin/
-sudo mv /usr/local/bin/docker-compose /usr/bin/docker-compose
-
-# Присваивание прав на выполнение
-sudo chmod +x /usr/bin/docker-compose
 
 # Установка Docker
 sudo apt install -y docker.io
@@ -57,4 +47,4 @@ docker run -d \
   --restart unless-stopped \
   ghcr.io/wg-easy/wg-easy
 
-echo "http://$IP:51821\n$PASSWORD" > wg-out.txt
+echo -e "http://$IP:51821\n$PASSWORD" > wg-out.txt
