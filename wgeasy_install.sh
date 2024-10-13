@@ -3,6 +3,12 @@ sysctl -w net.ipv6.conf.all.disable_ipv6=1
 sysctl -w net.ipv6.conf.default.disable_ipv6=1
 sysctl -w net.ipv6.conf.lo.disable_ipv6=1
 sysctl -p
+
+# Запрос пароля у пользователя сразу в начале скрипта
+echo "Пожалуйста, введите пароль для генерации хеша:"
+read -sp "Введите пароль: " password
+echo
+
 # Обновление пакетов и установка apache2-utils
 sudo apt-get update
 sudo apt-get install -y apache2-utils
@@ -13,10 +19,6 @@ if [ ! -f /usr/bin/htpasswd ]; then
     exit
 fi
 
-
-# Запрос пароля у пользователя
-read -sp "Введите пароль: " password
-echo
 
 # Генерация bcrypt-хеша
 hash=$(htpasswd -nbBC 10 "" "$password" | tr -d ':\n')
@@ -54,3 +56,5 @@ docker run -d \
   --sysctl="net.ipv4.ip_forward=1" \
   --restart unless-stopped \
   ghcr.io/wg-easy/wg-easy
+
+echo "http://$IP:51821\n$PASSWORD" > wg-out.txt
