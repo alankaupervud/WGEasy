@@ -27,7 +27,10 @@ sudo apt install -y docker.io docker-compose -y
 
 # Проверка успешной установки Docker Compose
 docker-compose --version
-IP=$(curl -s ifconfig.me)
+#IP=$(curl -s ifconfig.me)
+IP=$(ip addr show ens3 | grep -oP 'inet \K[\d.]+')
+
+
 # Запуск контейнера с использованием сгенерированного хеша
 docker run -d \
   --name=wg-easy \
