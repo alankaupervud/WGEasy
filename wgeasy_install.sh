@@ -7,12 +7,12 @@ sysctl -p
 sudo apt-get update
 sudo apt-get install -y apache2-utils
 
-# Убедимся, что утилита htpasswd установлена
-if ! command -v htpasswd &> /dev/null
-then
+# Проверим, существует ли утилита htpasswd
+if [ ! -f /usr/bin/htpasswd ]; then
     echo "htpasswd не установлена. Установите с помощью: sudo apt-get install apache2-utils"
     exit
 fi
+
 
 # Запрос пароля у пользователя
 read -sp "Введите пароль: " password
