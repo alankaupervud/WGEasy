@@ -23,7 +23,7 @@ hash=$(htpasswd -nbBC 10 "" "$PASSWORD" | tr -d ':\n')
 echo "Bcrypt хеш: $hash"
 
 # Установка Docker
-sudo apt install -y docker.io
+sudo apt install -y docker.io docker-compose -y
 
 # Проверка успешной установки Docker Compose
 docker-compose --version
