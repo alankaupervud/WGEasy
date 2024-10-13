@@ -1,12 +1,19 @@
 #!/bin/bash
 
-# Запрос пароля у пользователя сразу в начале скрипта (без использования sudo)
+# Запрос пароля у пользователя (без использования sudo)
 echo "Пожалуйста, введите пароль для генерации хеша:"
 read -sp "Введите пароль: " password
 echo
 
-# Отключение IPv6 и другие команды под sudo
+# Генерация bcrypt-хеша (до выполнения команд под sudo)
+hash=$(htpasswd -nbBC 10 "" "$password" | tr -d ':\n')
+
+# Вывод хеша для отладки (можете убрать позже)
+echo "Сгенерированный bcrypt хеш: $hash"
+
+# Теперь начнем выполнение команд с sudo
 sudo bash <<EOF
+# Отключение IPv6
 sysctl -w net.ipv6.conf.all.disable_ipv6=1
 sysctl -w net.ipv6.conf.default.disable_ipv6=1
 sysctl -w net.ipv6.conf.lo.disable_ipv6=1
@@ -15,18 +22,6 @@ sysctl -p
 # Обновление пакетов и установка apache2-utils
 apt-get update
 apt-get install -y apache2-utils
-
-# Проверим, существует ли утилита htpasswd
-if [ ! -f /usr/bin/htpasswd ]; then
-    echo "htpasswd не установлена. Установите с помощью: apt-get install apache2-utils"
-    exit
-fi
-
-# Генерация bcrypt-хеша
-hash=$(htpasswd -nbBC 10 "" "$password" | tr -d ':\n')
-
-# Вывод хеша
-echo "Bcrypt хеш: $hash"
 
 # Загрузка Docker Compose
 curl -L "https://github.com/docker/compose/releases/download/v2.29.2/docker-compose-\$(uname -s)-\$(uname -m)" -o /usr/local/bin/docker-compose
