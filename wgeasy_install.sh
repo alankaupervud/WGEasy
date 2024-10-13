@@ -1,5 +1,8 @@
 #!/bin/bash
-
+sysctl -w net.ipv6.conf.all.disable_ipv6=1
+sysctl -w net.ipv6.conf.default.disable_ipv6=1
+sysctl -w net.ipv6.conf.lo.disable_ipv6=1
+sysctl -p
 # Обновление пакетов и установка apache2-utils
 sudo apt-get update
 sudo apt-get install -y apache2-utils
@@ -35,11 +38,11 @@ sudo apt install -y docker.io
 
 # Проверка успешной установки Docker Compose
 docker-compose --version
-
+IP=$(curl -s ifconfig.me)
 # Запуск контейнера с использованием сгенерированного хеша
 docker run -d \
   --name=wg-easy \
-  -e WG_HOST=5.42.106.52 \
+  -e WG_HOST=$IP \
   -e PASSWORD_HASH="$hash" \
   -e WG_MTU=1280 \
   -v ~/.wg-easy:/etc/wireguard \
