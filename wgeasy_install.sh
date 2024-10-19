@@ -25,6 +25,9 @@ echo "Bcrypt хеш: $hash"
 # Установка Docker
 sudo apt install -y docker.io docker-compose -y
 
+# Иногда Docker установлен, но по какой-то причене он не запустился. Это поднимет его принудительно. 
+sudo systemctl enable --now docker
+
 # Проверка успешной установки Docker Compose
 docker-compose --version
 #IP=$(curl -s ifconfig.me)
