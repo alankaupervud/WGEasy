@@ -1,9 +1,8 @@
 #!/bin/bash
 
-
-
-# Генерация случайного пароля
-PASSWORD=$(< /dev/urandom tr -dc A-Z-a-z-0-9 | head -c${1:-16};echo;)
+# Генерация случайного пароля (16 символов)
+PASSWORD=$(< /dev/urandom tr -dc A-Za-z0-9 | head -c${1:-16})
+echo
 
 # Обновление пакетов и установка apache2-utils
 sudo apt-get update
@@ -12,9 +11,8 @@ sudo apt-get install -y apache2-utils
 # Проверим, существует ли утилита htpasswd
 if [ ! -f /usr/bin/htpasswd ]; then
     echo "htpasswd не установлена. Установите с помощью: sudo apt-get install apache2-utils"
-    exit
+    exit 1
 fi
-
 
 # Генерация bcrypt-хеша
 hash=$(htpasswd -nbBC 10 "" "$PASSWORD" | tr -d ':\n')
@@ -22,19 +20,23 @@ hash=$(htpasswd -nbBC 10 "" "$PASSWORD" | tr -d ':\n')
 # Вывод хеша
 echo "Bcrypt хеш: $hash"
 
-# Установка Docker
-sudo apt install -y docker.io docker-compose -y
+# Установка Docker и docker-compose
+sudo apt install -y docker.io docker-compose
 
-# Иногда Docker установлен, но по какой-то причене он не запустился. Это поднимет его принудительно. 
+# Включаем и запускаем docker
 sudo systemctl enable --now docker
 
-# Проверка успешной установки Docker Compose
+# Проверка docker-compose
 docker-compose --version
-#IP=$(curl -s ifconfig.me)
-IP=$(ip addr show ens3 | grep -oP 'inet \K[\d.]+')
 
+# Определяем IP (сначала внешний, если нет - берем локальный)
+IP=$(curl -s ifconfig.me)
+if [ -z "$IP" ]; then
+    IP=$(hostname -I | awk '{print $1}')
+fi
+echo "Detected IP: $IP"
 
-# Запуск контейнера с использованием сгенерированного хеша
+# Запуск контейнера wg-easy
 docker run -d \
   --name=wg-easy \
   -e WG_HOST=$IP \
@@ -50,4 +52,7 @@ docker run -d \
   --restart unless-stopped \
   ghcr.io/wg-easy/wg-easy
 
+# Запишем URL панели и пароль в файл
 echo -e "http://$IP:51821\n$PASSWORD" > wg-out.txt
+
+echo "Готово. Админка и пароль записаны в wg-out.txt"
